@@ -1,0 +1,13 @@
+{
+  "name": "coffeepilot-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CoffeePilot Android app for the DeLonghi Stilosa Shellys",
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2"
+  }
+}

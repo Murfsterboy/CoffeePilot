@@ -1,0 +1,63 @@
+# Builds the CoffeePilot Android app (APK) and publishes it as a GitHub release.
+# Runs when anything in app/ changes, or by hand from the Actions tab ("Run workflow").
+# Download on your phone: https://github.com/Murfsterboy/CoffeePilot/releases/latest/download/CoffeePilot.apk
+name: Build CoffeePilot Android app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/coffeepilot-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Bundle the current web app into the APK
+        working-directory: app
+        run: |
+          cp ../coffeepilot.js www/coffeepilot.js
+          npm ci --no-audit --no-fund
+          cp node_modules/@capacitor/core/dist/capacitor.js www/capacitor.js
+          npx cap sync android
+
+      - name: Build the APK
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../CoffeePilot.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CoffeePilot-apk
+          path: app/CoffeePilot.apk
+
+      - name: Publish as the latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-build-${{ github.run_number }}
+          name: CoffeePilot app · build ${{ github.run_number }}
+          make_latest: true
+          files: app/CoffeePilot.apk
+          body: |
+            Open this page on your Android phone and tap CoffeePilot.apk to download and install it.
+            Updates install over the top, keeping your saved places and shot log.
